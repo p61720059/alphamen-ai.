@@ -1,0 +1,10 @@
+{
+  "name": "ALPHAMEN AI Studio",
+  "short_name": "ALPHAMEN AI",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#090909",
+  "theme_color": "#090909",
+  "description": "Mobile cinematic AI video prompt studio",
+  "icons": []
+}

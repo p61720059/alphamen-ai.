@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#090909">
+  <title>ALPHAMEN AI Studio</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand"><span class="mark">A</span><div><b>ALPHAMEN AI</b><small> CINEMATIC STUDIO</small></div></div>
+  <span class="status"><i></i> MOBILE STUDIO</span>
+</header>
+<main>
+  <section class="hero">
+    <p class="eyebrow">YOUR STORY. YOUR CINEMA.</p>
+    <h1>Create cinematic<br><em>AI videos.</em></h1>
+    <p class="sub">Build a scene prompt, prepare an image reference and export your generation brief.</p>
+  </section>
+
+  <section class="panel">
+    <div class="section-title"><span>01</span><h2>Describe your scene</h2></div>
+    <label for="prompt">VIDEO PROMPT</label>
+    <textarea id="prompt" rows="5" placeholder="Example: A brave warrior enters an ancient kingdom at sunrise..."></textarea>
+    <div class="chips" id="presets">
+      <button type="button" data-prompt="A fearless warrior walks through an ancient Indian kingdom at sunrise, golden dust in the air, cinematic tracking shot, realistic detailed 3D animation.">Warrior</button>
+      <button type="button" data-prompt="A majestic lion king stands on a rocky cliff above a vast jungle, wind moving its mane, dramatic sunset, cinematic realistic 3D animation.">Lion king</button>
+      <button type="button" data-prompt="A magical forest temple emerges through mist, glowing fireflies, slow camera push-in, rich cinematic lighting, detailed 3D animation.">Fantasy</button>
+    </div>
+    <div class="section-title space"><span>02</span><h2>Generation settings</h2></div>
+    <div class="two">
+      <div><label for="mode">CREATION MODE</label><select id="mode"><option>Text to video</option><option>Image to video</option></select></div>
+      <div><label for="ratio">VIDEO FORMAT</label><select id="ratio"><option value="16:9">YouTube 16:9</option><option value="9:16">Reels / Shorts 9:16</option><option value="1:1">Square 1:1</option></select></div>
+      <div><label for="resolution">TARGET QUALITY</label><select id="resolution"><option>1080p Full HD</option><option>4K upscale (export target)</option><option>720p draft</option></select></div>
+      <div><label for="duration">CLIP LENGTH</label><select id="duration"><option>5 seconds</option><option>8 seconds</option><option>10 seconds</option></select></div>
+      <div><label for="voice">VOICE-OVER</label><select id="voice"><option>Telugu</option><option>English</option><option>Hindi</option><option>No voice-over</option></select></div>
+      <div><label for="style">VISUAL STYLE</label><select id="style"><option>Realistic cinematic 3D</option><option>Epic fantasy 3D</option><option>Stylized 3D animation</option><option>Photorealistic</option></select></div>
+    </div>
+    <div class="section-title space"><span>03</span><h2>Reference image</h2></div>
+    <label class="upload" for="imageInput"><span class="upload-icon">＋</span><b>Add an image</b><small>Optional · JPG, PNG or WEBP</small><input id="imageInput" type="file" accept="image/png,image/jpeg,image/webp"></label>
+    <div id="imagePreview" class="preview hidden"><img id="previewImg" alt="Selected reference image"><button id="removeImage" type="button">Remove image</button></div>
+    <button id="buildBtn" class="primary" type="button">BUILD MY VIDEO PROMPT <span>↗</span></button>
+    <p class="notice">This starter app prepares a complete prompt brief. Actual AI video rendering needs a connected GPU model/API; this free starter does not pretend to render a video on your phone.</p>
+  </section>
+
+  <section id="result" class="panel hidden">
+    <div class="section-title"><span>04</span><h2>Your generation brief</h2></div>
+    <pre id="brief"></pre>
+    <div class="actions"><button id="copyBtn" class="primary" type="button">COPY BRIEF</button><button id="downloadBtn" class="secondary" type="button">DOWNLOAD .TXT</button></div>
+  </section>
+
+  <section class="panel saved-panel">
+    <div class="section-title"><span>05</span><h2>Saved projects</h2></div>
+    <p class="muted">Your recent briefs are saved on this device.</p>
+    <div id="savedList" class="saved-list">No projects saved yet.</div>
+  </section>
+</main>
+<footer>ALPHAMEN AI <span>·</span> CREATIVE TOOLS FOR EVERY STORY</footer>
+<script src="app.js"></script>
+</body>
+</html>
