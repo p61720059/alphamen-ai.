@@ -257,3 +257,77 @@ $("downloadBtn").addEventListener("click", () => {
 });
 
 renderSaved();
+
+// IMAGE TO VIDEO - IMAGE PREVIEW
+const sceneImage = $("sceneImage");
+const scenePreview = $("scenePreview");
+const videoPrompt = $("videoPrompt");
+const videoStatus = $("videoStatus");
+const generateVideoBtn = $("generateVideoBtn");
+
+if (sceneImage && scenePreview) {
+  sceneImage.addEventListener("change", event => {
+    const file = event.target.files[0];
+
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      alert("Please select a valid image.");
+      sceneImage.value = "";
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      alert("Please select an image under 10 MB.");
+      sceneImage.value = "";
+      return;
+    }
+
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      scenePreview.src = reader.result;
+      scenePreview.style.display = "block";
+      videoStatus.textContent = "Image uploaded successfully. Enter your visual prompt.";
+    };
+
+    reader.readAsDataURL(file);
+  });
+}
+
+// GENERATE VIDEO - BACKEND CONNECTION PENDING
+if (generateVideoBtn) {
+  generateVideoBtn.addEventListener("click", () => {
+    const file = sceneImage?.files?.[0];
+    const prompt = videoPrompt?.value.trim();
+
+    if (!file) {
+      alert("Please upload a scene image first.");
+      return;
+    }
+
+    if (!prompt) {
+      alert("Please enter a visual prompt.");
+      videoPrompt.focus();
+      return;
+    }
+
+    videoStatus.textContent =
+      "Image and prompt are ready. Connect an AI video-generation backend to render your video.";
+
+    const report = `ALPHAMEN AI - IMAGE TO VIDEO PROJECT
+
+Image: ${file.name}
+Visual Prompt:
+${prompt}
+
+Duration: ${$("videoDuration").value} seconds
+
+Status: Ready for AI video rendering.
+Backend connection is required to generate the actual video.`;
+
+    showBrief(report);
+    saveProject("Image to Video Scene", report);
+  });
+}
+
