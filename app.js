@@ -1,16 +1,128 @@
-const $=id=>document.getElementById(id);
-let imageData="";
-document.querySelectorAll("#presets button").forEach(b=>b.addEventListener("click",()=>{$("prompt").value=b.dataset.prompt;}));
-$("imageInput").addEventListener("change",e=>{
-  const file=e.target.files[0]; if(!file)return;
-  if(file.size>5*1024*1024){alert("Please choose an image under 5 MB.");e.target.value="";return;}
-  const reader=new FileReader();reader.onload=()=>{imageData=reader.result;$("previewImg").src=imageData;$("imagePreview").classList.remove("hidden");};reader.readAsDataURL(file);
+
+const $ = id => document.getElementById(id);
+
+let imageData = "";
+let savedProjects = JSON.parse(localStorage.getItem("alphamen_projects") || "[]");
+
+function saveProject(title, content) {
+  savedProjects.unshift({
+    title,
+    content,
+    date: new Date().toLocaleString()
+  });
+
+  savedProjects = savedProjects.slice(0, 15);
+  localStorage.setItem("alphamen_projects", JSON.stringify(savedProjects));
+  renderSaved();
+}
+
+function renderSaved() {
+  const list = $("savedList");
+  if (!list) return;
+
+  if (!savedProjects.length) {
+    list.textContent = "No projects saved yet.";
+    return;
+  }
+
+  list.innerHTML = "";
+
+  savedProjects.forEach((item, index) => {
+    const div = document.createElement("div");
+    div.style.padding = "12px";
+    div.style.marginBottom = "10px";
+    div.style.border = "1px solid #66502c";
+    div.style.borderRadius = "8px";
+
+    const title = document.createElement("strong");
+    title.textContent = item.title;
+
+    const date = document.createElement("p");
+    date.textContent = item.date;
+
+    const open = document.createElement("button");
+    open.textContent = "OPEN";
+    open.onclick = () => showBrief(item.content);
+
+    const remove = document.createElement("button");
+    remove.textContent = "DELETE";
+    remove.style.marginLeft = "8px";
+    remove.onclick = () => {
+      savedProjects.splice(index, 1);
+      localStorage.setItem("alphamen_projects", JSON.stringify(savedProjects));
+      renderSaved();
+    };
+
+    div.append(title, date, open, remove);
+    list.appendChild(div);
+  });
+}
+
+function showBrief(content) {
+  $("brief").textContent = content;
+  $("result").classList.remove("hidden");
+  $("result").scrollIntoView({ behavior: "smooth" });
+}
+
+function downloadText(filename, content) {
+  const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// Scene prompt presets
+document.querySelectorAll("#presets button").forEach(button => {
+  button.addEventListener("click", () => {
+    $("prompt").value = button.dataset.prompt || "";
+  });
 });
-$("removeImage").addEventListener("click",()=>{imageData="";$("imageInput").value="";$("imagePreview").classList.add("hidden");});
-function makeBrief(){
- const prompt=$("prompt").value.trim(); if(!prompt){alert("Please describe your scene first.");$("prompt").focus();return null;}
- return `ALPHAMEN AI — VIDEO GENERATION BRIEF
-====================================
+
+// Reference image preview
+$("imageInput").addEventListener("change", event => {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  if (!file.type.startsWith("image/")) {
+    alert("Please select an image.");
+    return;
+  }
+
+  if (file.size > 5 * 1024 * 1024) {
+    alert("Please choose an image under 5 MB.");
+    event.target.value = "";
+    return;
+  }
+
+  const reader = new FileReader();
+
+  reader.onload = () => {
+    imageData = reader.result;
+    $("imagePreview").innerHTML = "";
+    const img = document.createElement("img");
+    img.src = imageData;
+    img.alt = "Selected reference image";
+    $("imagePreview").appendChild(img);
+  };
+
+  reader.readAsDataURL(file);
+});
+
+// Video prompt builder
+$("buildBtn").addEventListener("click", () => {
+  const prompt = $("prompt").value.trim();
+
+  if (!prompt) {
+    alert("Please describe your scene first.");
+    $("prompt").focus();
+    return;
+  }
+
+  const brief = `ALPHAMEN AI - VIDEO GENERATION BRIEF
+
 Scene prompt:
 ${prompt}
 
@@ -20,26 +132,128 @@ Target quality: ${$("resolution").value}
 Clip length: ${$("duration").value}
 Voice-over: ${$("voice").value}
 Visual style: ${$("style").value}
-Reference image attached in this app: ${imageData?"Yes (image is stored only in this browser session)":"No"}
 
-Suggested negative prompt:
-blurry, low detail, distorted face, extra fingers, flicker, jitter, unstable camera, watermark, text artifacts, compression artifacts
+Reference image: ${imageData ? "Selected" : "Not selected"}
 
-Suggested production notes:
-Keep character appearance consistent. Use smooth cinematic camera movement, coherent motion, realistic lighting, detailed textures and stable anatomy.
+Production notes:
+Keep character appearance consistent.
+Use cinematic camera movement.
+Use realistic lighting and smooth motion.
 
 IMPORTANT:
-This is a prompt brief, not a rendered video. Connect a compatible hosted video-generation model/API to render the clip. 4K upscale is a target export setting, not a guarantee of native 4K generation.
+This is a generation brief, not a rendered video.
+Connect an AI video-generation service to render the clip.`;
+
+  showBrief(brief);
+  saveProject("Video Scene", brief);
+});
+
+// Story to scene breakdown
+$("storyBtn").addEventListener("click", () => {
+  const name = $("movieName").value.trim() || "Untitled Movie";
+  const story = $("story").value.trim();
+
+  if (!story) {
+    alert("Please enter your movie story.");
+    $("story").focus();
+    return;
+  }
+
+  const sentences = story
+    .split(/(?<=[.!?।])\s+|\n+/)
+    .map(s => s.trim())
+    .filter(Boolean);
+
+  const scenes = sentences.map((sentence, index) => {
+    return `SCENE ${index + 1}
+
+Story:
+${sentence}
+
+VISUAL PROMPT:
+Cinematic 3D realistic movie scene.
+${sentence}
+Professional movie lighting, detailed environment,
+smooth camera movement, consistent characters.
+
+VOICE-OVER:
+${sentence}
+
 `;
-}
-function saveBrief(brief){
- let items=JSON.parse(localStorage.getItem("alphamen_projects")||"[]");
- items.unshift({date:new Date().toLocaleString(),brief});
- localStorage.setItem("alphamen_projects",JSON.stringify(items.slice(0,8)));renderSaved();
-}
-$("buildBtn").addEventListener("click",()=>{const b=makeBrief();if(!b)return;$("brief").textContent=b;$("result").classList.remove("hidden");saveBrief(b);$("result").scrollIntoView({behavior:"smooth"});});
-$("copyBtn").addEventListener("click",async()=>{try{await navigator.clipboard.writeText($("brief").textContent);$("copyBtn").textContent="COPIED!";}catch(e){alert("Copy not available. Select and copy the text manually.");}});
-$("downloadBtn").addEventListener("click",()=>{const blob=new Blob([$("brief").textContent],{type:"text/plain"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="alphamen-video-brief.txt";a.click();URL.revokeObjectURL(a.href);});
-function renderSaved(){const items=JSON.parse(localStorage.getItem("alphamen_projects")||"[]");$("savedList").innerHTML=items.length?items.map((x,i)=>`<div class="saved-item"><span>${x.date} · ${x.brief.split("\\n")[3].slice(0,42)}...</span><button data-i="${i}">OPEN</button></div>`).join(""):"No projects saved yet.";document.querySelectorAll(".saved-item button").forEach(b=>b.addEventListener("click",()=>{const x=JSON.parse(localStorage.getItem("alphamen_projects")||"[]")[+b.dataset.i];$("brief").textContent=x.brief;$("result").classList.remove("hidden");$("result").scrollIntoView({behavior:"smooth"});}));}
+  }).join("\n");
+
+  const output = `ALPHAMEN AI MINI MOVIE PLAN
+
+Movie: ${name}
+Duration: ${$("movieDuration").value}
+Language: ${$("movieLanguage").value}
+
+TOTAL SCENES: ${sentences.length}
+
+${scenes}
+
+NEXT PRODUCTION STEPS:
+1. Generate scene images.
+2. Animate each scene using an AI video model.
+3. Create Telugu voice-over.
+4. Add character lip sync.
+5. Join scenes in the movie editor.
+6. Add music, effects and subtitles.
+7. Export the final movie.`;
+
+  $("sceneOutput").textContent = output;
+  showBrief(output);
+  saveProject(name, output);
+});
+
+// Lip sync preparation
+$("lipBtn").addEventListener("click", () => {
+  const dialogue = $("dialogue").value.trim();
+  const audio = $("lipAudio").files[0];
+  const photo = $("lipImage").files[0];
+
+  if (!dialogue && !audio) {
+    alert("Enter dialogue or select an audio file.");
+    return;
+  }
+
+  const report = `ALPHAMEN AI - LIP SYNC PROJECT
+
+Dialogue:
+${dialogue || "Use selected audio"}
+
+Audio file:
+${audio ? audio.name : "Not selected"}
+
+Character photo:
+${photo ? photo.name : "Not selected"}
+
+Language: Telugu
+Task: Synchronize character mouth movement with speech.
+
+RENDERING:
+A compatible AI lip-sync model and backend are required.
+This brief does not render a talking video by itself.`;
+
+  showBrief(report);
+  saveProject("Lip Sync Project", report);
+});
+
+// Copy brief
+$("copyBtn").addEventListener("click", async () => {
+  const text = $("brief").textContent;
+
+  try {
+    await navigator.clipboard.writeText(text);
+    alert("Brief copied successfully!");
+  } catch {
+    alert("Copy not supported. Please select and copy the text.");
+  }
+});
+
+// Download brief
+$("downloadBtn").addEventListener("click", () => {
+  downloadText("alphamen-movie-brief.txt", $("brief").textContent);
+});
+
 renderSaved();
-if("serviceWorker" in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));}
