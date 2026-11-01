@@ -110,7 +110,46 @@
 </section>
 
 <section class="panel">
-  <div class="section-title"><span>06</span><h2>Your generation brief</h2></div>
+  <div class="section-title">
+    <span>06</span>
+    <h2>Image to Video Studio</h2>
+  </div>
+
+  <label for="sceneImage">UPLOAD SCENE IMAGE</label>
+  <input id="sceneImage" type="file" accept="image/*">
+
+  <img id="scenePreview" alt="Scene preview"
+       style="display:none; width:100%; border-radius:12px; margin-top:12px;">
+
+  <label for="videoPrompt">VISUAL PROMPT</label>
+  <textarea id="videoPrompt" rows="4"
+    placeholder="Describe the movement, camera angle, lighting and action..."></textarea>
+
+  <label for="videoDuration">VIDEO DURATION</label>
+  <select id="videoDuration">
+    <option value="5">5 Seconds</option>
+    <option value="10">10 Seconds</option>
+  </select>
+
+  <button type="button" class="primary" id="generateVideoBtn">
+    GENERATE VIDEO
+  </button>
+
+  <p id="videoStatus" class="notice">
+    Upload an image and enter a visual prompt.
+  </p>
+
+  <video id="generatedVideo" controls
+    style="display:none; width:100%; margin-top:12px; border-radius:12px;">
+  </video>
+
+  <a id="downloadVideo" style="display:none;" download="alphamen-scene.mp4">
+    DOWNLOAD VIDEO
+  </a>
+</section>
+
+<section class="panel">
+  <div class="section-title"><span>08</span><h2>Your generation brief</h2></div>
   <section id="result" class="hidden">
     <pre id="brief"></pre>
     <div class="actions">
