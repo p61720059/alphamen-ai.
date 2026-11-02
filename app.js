@@ -405,10 +405,20 @@ if (generateVideoBtn) {
       form.append("prompt", prompt);
       form.append("duration", String(duration));
 
-      const response = await fetch(`${WORKER_URL}/generate`, {
-        method: "POST",
-        body: form
-      });
+      const accessCode = prompt("Enter FILMATRIX Access Code:");
+
+if (!accessCode) {
+  videoStatus.textContent = "Access code required.";
+  return;
+}
+
+const response = await fetch(`${WORKER_URL}/generate`, {
+  method: "POST",
+  headers: {
+    "X-FILMATRIX-ACCESS-CODE": accessCode
+  },
+  body: form
+});
 
       const result = await response.json();
 
@@ -430,9 +440,13 @@ if (generateVideoBtn) {
         await new Promise(resolve => setTimeout(resolve, 5000));
 
         const statusResponse = await fetch(
-          `${WORKER_URL}/status?id=${encodeURIComponent(projectId)}`
-        );
-
+  `${WORKER_URL}/status?id=${encodeURIComponent(projectId)}`,
+  {
+    headers: {
+      "X-FILMATRIX-ACCESS-CODE": accessCode
+    }
+  }
+);
         const statusData = await statusResponse.json();
 
         if (!statusResponse.ok) {
