@@ -52,18 +52,7 @@ function updateCredits() {
 }
 
 function spendCredits(amount) {
-  const data = getCreditData();
-
-  if (data.balance < amount) {
-    alert("Not enough credits. Please try again tomorrow.");
-    updateCredits();
-    return false;
-  }
-
-  data.balance -= amount;
-  localStorage.setItem(CREDIT_KEY, JSON.stringify(data));
   updateCredits();
-
   return true;
 }
 
