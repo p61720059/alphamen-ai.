@@ -370,11 +370,15 @@ if (sceneImage && scenePreview) {
 }
 
 // IMAGE TO VIDEO + CREDIT CHECK
+
+// IMAGE TO VIDEO - MAGIC HOUR BACKEND
+const WORKER_URL = "https://patient-mode-be97.prem181295.workers.dev";
+
 if (generateVideoBtn) {
-  generateVideoBtn.addEventListener("click", () => {
+  generateVideoBtn.addEventListener("click", async () => {
     const file = sceneImage?.files?.[0];
     const prompt = videoPrompt?.value.trim();
-    const duration = $("videoDuration").value;
+    const duration = Number($("videoDuration").value);
 
     if (!file) {
       alert("Please upload a scene image first.");
@@ -387,32 +391,104 @@ if (generateVideoBtn) {
       return;
     }
 
-    const cost = getVideoCreditCost(duration);
-
-    if (!spendCredits(cost)) {
+    if (![3, 4, 5].includes(duration)) {
+      alert("Choose a duration of 3, 4, or 5 seconds.");
       return;
     }
 
-    const report = `FILMATRIX AI - IMAGE TO VIDEO PROJECT
+    generateVideoBtn.disabled = true;
+    videoStatus.textContent = "Uploading image to Magic Hour...";
 
-Image: ${file.name}
+    try {
+      const form = new FormData();
+      form.append("image", file);
+      form.append("prompt", prompt);
+      form.append("duration", String(duration));
 
-Visual Prompt:
-${prompt}
+      const response = await fetch(`${WORKER_URL}/generate`, {
+        method: "POST",
+        body: form
+      });
 
-Duration: ${formatDuration(duration)}
+      const result = await response.json();
 
-Credits used: ${cost}
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || "Video request failed.");
+      }
 
-Status: Generation brief prepared.
-Actual video rendering requires an AI video backend.`;
+      const project = result.project || {};
+      const projectId =
+        project.id || project.project_id || project.video_project_id;
 
-    videoStatus.textContent =
-      `Brief prepared. ${cost} credit(s) used. Actual video rendering is not connected yet.`;
+      if (!projectId) {
+        throw new Error("Project ID was not returned by the video service.");
+      }
 
-    showBrief(report);
-    saveProject("Image to Video Scene", report);
+      videoStatus.textContent = "Video is rendering...";
+
+      for (let attempt = 0; attempt < 60; attempt++) {
+        await new Promise(resolve => setTimeout(resolve, 5000));
+
+        const statusResponse = await fetch(
+          `${WORKER_URL}/status?id=${encodeURIComponent(projectId)}`
+        );
+
+        const statusData = await statusResponse.json();
+
+        if (!statusResponse.ok) {
+          throw new Error(statusData.error || "Could not check video status.");
+        }
+
+        const state = String(statusData.status || "").toLowerCase();
+
+        if (state === "complete") {
+          const downloads = statusData.downloads || [];
+          const videoUrl =
+            statusData.download_url ||
+            statusData.video_url ||
+            (Array.isArray(downloads)
+              ? downloads[0]?.url
+              : downloads?.url);
+
+          if (!videoUrl) {
+            videoStatus.textContent =
+              "Video completed. Download link was not found in the response.";
+            return;
+          }
+
+          videoStatus.textContent = "Video ready!";
+
+          const link = document.createElement("a");
+          link.href = videoUrl;
+          link.target = "_blank";
+          link.rel = "noopener";
+          link.textContent = "DOWNLOAD YOUR VIDEO";
+          link.style.display = "block";
+          link.style.marginTop = "12px";
+
+          videoStatus.appendChild(document.createElement("br"));
+          videoStatus.appendChild(link);
+          return;
+        }
+
+        if (["error", "canceled"].includes(state)) {
+          throw new Error("Video rendering failed: " + state);
+        }
+
+        videoStatus.textContent = `Video rendering: ${state || "processing"}...`;
+      }
+
+      videoStatus.textContent =
+        "Rendering is taking longer. Check again later.";
+
+    } catch (error) {
+      videoStatus.textContent = "Error: " + error.message;
+    } finally {
+      generateVideoBtn.disabled = false;
+    }
   });
+}
+
 }
 
 // STARTUP
