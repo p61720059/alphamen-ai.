@@ -1,9 +1,86 @@
 
 const $ = id => document.getElementById(id);
 
-let imageData = "";
-let savedProjects = JSON.parse(localStorage.getItem("alphamen_projects") || "[]");
+// FILMATRIX AI storage
+const PROJECT_KEY = "filmatrix_projects";
+const CREDIT_KEY = "filmatrix_daily_credits";
+const DAILY_CREDITS = 16;
 
+let imageData = "";
+
+let savedProjects = JSON.parse(
+  localStorage.getItem(PROJECT_KEY) ||
+  localStorage.getItem("alphamen_projects") ||
+  "[]"
+);
+
+// DAILY CREDIT SYSTEM
+function todayKey() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+function getCreditData() {
+  let data;
+
+  try {
+    data = JSON.parse(localStorage.getItem(CREDIT_KEY) || "null");
+  } catch {
+    data = null;
+  }
+
+  if (!data || data.date !== todayKey()) {
+    data = {
+      date: todayKey(),
+      balance: DAILY_CREDITS
+    };
+    localStorage.setItem(CREDIT_KEY, JSON.stringify(data));
+  }
+
+  return data;
+}
+
+function updateCredits() {
+  const data = getCreditData();
+  const display = $("creditBalance");
+
+  if (display) {
+    display.textContent = data.balance + " Credits";
+  }
+
+  return data.balance;
+}
+
+function spendCredits(amount) {
+  const data = getCreditData();
+
+  if (data.balance < amount) {
+    alert("Not enough credits. Please try again tomorrow.");
+    updateCredits();
+    return false;
+  }
+
+  data.balance -= amount;
+  localStorage.setItem(CREDIT_KEY, JSON.stringify(data));
+  updateCredits();
+
+  return true;
+}
+
+function getVideoCreditCost(seconds) {
+  return Number(seconds) > 300 ? 2 : 1;
+}
+
+function formatDuration(seconds) {
+  seconds = Number(seconds);
+
+  if (seconds < 60) return seconds + " seconds";
+  if (seconds % 60 === 0) return (seconds / 60) + " minutes";
+
+  return seconds + " seconds";
+}
+
+// SAVE PROJECTS
 function saveProject(title, content) {
   savedProjects.unshift({
     title,
@@ -12,7 +89,8 @@ function saveProject(title, content) {
   });
 
   savedProjects = savedProjects.slice(0, 15);
-  localStorage.setItem("alphamen_projects", JSON.stringify(savedProjects));
+
+  localStorage.setItem(PROJECT_KEY, JSON.stringify(savedProjects));
   renderSaved();
 }
 
@@ -47,9 +125,10 @@ function renderSaved() {
     const remove = document.createElement("button");
     remove.textContent = "DELETE";
     remove.style.marginLeft = "8px";
+
     remove.onclick = () => {
       savedProjects.splice(index, 1);
-      localStorage.setItem("alphamen_projects", JSON.stringify(savedProjects));
+      localStorage.setItem(PROJECT_KEY, JSON.stringify(savedProjects));
       renderSaved();
     };
 
@@ -65,23 +144,28 @@ function showBrief(content) {
 }
 
 function downloadText(filename, content) {
-  const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+  const blob = new Blob([content], {
+    type: "text/plain;charset=utf-8"
+  });
+
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
+
   a.href = url;
   a.download = filename;
   a.click();
+
   URL.revokeObjectURL(url);
 }
 
-// Scene prompt presets
+// SCENE PROMPT PRESETS
 document.querySelectorAll("#presets button").forEach(button => {
   button.addEventListener("click", () => {
     $("prompt").value = button.dataset.prompt || "";
   });
 });
 
-// Reference image preview
+// REFERENCE IMAGE PREVIEW
 $("imageInput").addEventListener("change", event => {
   const file = event.target.files[0];
   if (!file) return;
@@ -102,16 +186,18 @@ $("imageInput").addEventListener("change", event => {
   reader.onload = () => {
     imageData = reader.result;
     $("imagePreview").innerHTML = "";
+
     const img = document.createElement("img");
     img.src = imageData;
     img.alt = "Selected reference image";
+
     $("imagePreview").appendChild(img);
   };
 
   reader.readAsDataURL(file);
 });
 
-// Video prompt builder
+// VIDEO PROMPT BUILDER
 $("buildBtn").addEventListener("click", () => {
   const prompt = $("prompt").value.trim();
 
@@ -121,7 +207,7 @@ $("buildBtn").addEventListener("click", () => {
     return;
   }
 
-  const brief = `ALPHAMEN AI - VIDEO GENERATION BRIEF
+  const brief = `FILMATRIX AI - VIDEO GENERATION BRIEF
 
 Scene prompt:
 ${prompt}
@@ -148,7 +234,7 @@ Connect an AI video-generation service to render the clip.`;
   saveProject("Video Scene", brief);
 });
 
-// Story to scene breakdown
+// STORY TO SCENE BREAKDOWN
 $("storyBtn").addEventListener("click", () => {
   const name = $("movieName").value.trim() || "Untitled Movie";
   const story = $("story").value.trim();
@@ -182,7 +268,7 @@ ${sentence}
 `;
   }).join("\n");
 
-  const output = `ALPHAMEN AI MINI MOVIE PLAN
+  const output = `FILMATRIX AI MINI MOVIE PLAN
 
 Movie: ${name}
 Duration: ${$("movieDuration").value}
@@ -206,7 +292,7 @@ NEXT PRODUCTION STEPS:
   saveProject(name, output);
 });
 
-// Lip sync preparation
+// LIP SYNC PREPARATION
 $("lipBtn").addEventListener("click", () => {
   const dialogue = $("dialogue").value.trim();
   const audio = $("lipAudio").files[0];
@@ -217,7 +303,7 @@ $("lipBtn").addEventListener("click", () => {
     return;
   }
 
-  const report = `ALPHAMEN AI - LIP SYNC PROJECT
+  const report = `FILMATRIX AI - LIP SYNC PROJECT
 
 Dialogue:
 ${dialogue || "Use selected audio"}
@@ -239,7 +325,7 @@ This brief does not render a talking video by itself.`;
   saveProject("Lip Sync Project", report);
 });
 
-// Copy brief
+// COPY BRIEF
 $("copyBtn").addEventListener("click", async () => {
   const text = $("brief").textContent;
 
@@ -251,14 +337,12 @@ $("copyBtn").addEventListener("click", async () => {
   }
 });
 
-// Download brief
+// DOWNLOAD BRIEF
 $("downloadBtn").addEventListener("click", () => {
-  downloadText("alphamen-movie-brief.txt", $("brief").textContent);
+  downloadText("filmatrix-movie-brief.txt", $("brief").textContent);
 });
 
-renderSaved();
-
-// IMAGE TO VIDEO - IMAGE PREVIEW
+// IMAGE TO VIDEO PREVIEW
 const sceneImage = $("sceneImage");
 const scenePreview = $("scenePreview");
 const videoPrompt = $("videoPrompt");
@@ -288,18 +372,20 @@ if (sceneImage && scenePreview) {
     reader.onload = () => {
       scenePreview.src = reader.result;
       scenePreview.style.display = "block";
-      videoStatus.textContent = "Image uploaded successfully. Enter your visual prompt.";
+      videoStatus.textContent =
+        "Image uploaded successfully. Enter your visual prompt.";
     };
 
     reader.readAsDataURL(file);
   });
 }
 
-// GENERATE VIDEO - BACKEND CONNECTION PENDING
+// IMAGE TO VIDEO + CREDIT CHECK
 if (generateVideoBtn) {
   generateVideoBtn.addEventListener("click", () => {
     const file = sceneImage?.files?.[0];
     const prompt = videoPrompt?.value.trim();
+    const duration = $("videoDuration").value;
 
     if (!file) {
       alert("Please upload a scene image first.");
@@ -312,22 +398,34 @@ if (generateVideoBtn) {
       return;
     }
 
-    videoStatus.textContent =
-      "Image and prompt are ready. Connect an AI video-generation backend to render your video.";
+    const cost = getVideoCreditCost(duration);
 
-    const report = `ALPHAMEN AI - IMAGE TO VIDEO PROJECT
+    if (!spendCredits(cost)) {
+      return;
+    }
+
+    const report = `FILMATRIX AI - IMAGE TO VIDEO PROJECT
 
 Image: ${file.name}
+
 Visual Prompt:
 ${prompt}
 
-Duration: ${$("videoDuration").value} seconds
+Duration: ${formatDuration(duration)}
 
-Status: Ready for AI video rendering.
-Backend connection is required to generate the actual video.`;
+Credits used: ${cost}
+
+Status: Generation brief prepared.
+Actual video rendering requires an AI video backend.`;
+
+    videoStatus.textContent =
+      `Brief prepared. ${cost} credit(s) used. Actual video rendering is not connected yet.`;
 
     showBrief(report);
     saveProject("Image to Video Scene", report);
   });
 }
 
+// STARTUP
+renderSaved();
+updateCredits();
