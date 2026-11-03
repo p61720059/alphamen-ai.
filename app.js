@@ -471,18 +471,31 @@ const response = await fetch(`${WORKER_URL}/generate`, {
 
           videoStatus.textContent = "Video ready!";
 
-          const link = document.createElement("a");
-          link.href = videoUrl;
-          link.target = "_blank";
-          link.rel = "noopener";
-          link.textContent = "DOWNLOAD YOUR VIDEO";
-          link.style.display = "block";
-          link.style.marginTop = "12px";
+          const player = document.createElement("video");
+          player.src = videoUrl;
+          player.controls = true;
+          player.playsInline = true;
+          player.style.width = "100%";
+          player.style.maxWidth = "600px";
+          player.style.display = "block";
+          player.style.marginTop = "12px";
 
-          videoStatus.appendChild(document.createElement("br"));
-          videoStatus.appendChild(link);
+          const download = document.createElement("a");
+          download.href = videoUrl;
+          download.target = "_blank";
+          download.rel = "noopener";
+          download.textContent = "⬇ DOWNLOAD MP4";
+          download.style.display = "inline-block";
+          download.style.marginTop = "12px";
+          download.style.padding = "12px";
+          download.style.background = "#d4a017";
+          download.style.color = "#000";
+          download.style.borderRadius = "8px";
+     
+          videoStatus.appendChild(player);
+          videoStatus.appendChild(download);
           return;
-        }
+         }
 
         if (["error", "canceled"].includes(state)) {
           throw new Error("Video rendering failed: " + state);
