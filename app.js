@@ -405,8 +405,7 @@ if (generateVideoBtn) {
       form.append("prompt", prompt);
       form.append("duration", String(duration));
 
-      const accessCode = prompt("Enter FILMATRIX Access Code:");
-
+      const accessCode = window.prompt("Enter FILMATRIX Access Code:");
 if (!accessCode) {
   videoStatus.textContent = "Access code required.";
   return;
