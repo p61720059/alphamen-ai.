@@ -502,8 +502,6 @@ const response = await fetch(`${WORKER_URL}/generate`, {
   });
 }
 
-}
-
 // STARTUP
 renderSaved();
 updateCredits();
