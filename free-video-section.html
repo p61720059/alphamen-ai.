@@ -1,0 +1,29 @@
+<!-- FILMATRIX AI: Free local cinematic image-to-video tool -->
+<section id="freeCinematicStudio" class="panel">
+  <h2>Free Cinematic Video Maker</h2>
+  <p>Turn one image into a short cinematic clip directly in your browser. No API key or paid service.</p>
+
+  <label for="freeSceneImage">Upload scene image</label>
+  <input id="freeSceneImage" type="file" accept="image/*">
+
+  <label for="freeVideoPrompt">Scene description (optional)</label>
+  <textarea id="freeVideoPrompt" rows="3" placeholder="Example: A warrior standing in a storm, dramatic atmosphere"></textarea>
+
+  <label for="freeVideoDuration">Duration</label>
+  <select id="freeVideoDuration">
+    <option value="5">5 seconds</option>
+    <option value="10">10 seconds</option>
+  </select>
+
+  <label for="freeCameraMotion">Camera movement</label>
+  <select id="freeCameraMotion">
+    <option value="zoom">Slow cinematic zoom in</option>
+    <option value="pan">Smooth left-to-right pan</option>
+    <option value="pull">Slow cinematic pull back</option>
+  </select>
+
+  <button id="freeCreateVideo" type="button">Create Free Video</button>
+  <p id="freeVideoStatus" role="status">Upload an image to begin.</p>
+  <video id="freeVideoPreview" controls playsinline style="display:none;width:100%;max-width:720px"></video>
+  <a id="freeVideoDownload" style="display:none" download="filmatrix-cinematic-scene.webm">Download video</a>
+</section>
